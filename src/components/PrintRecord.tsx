@@ -58,6 +58,21 @@ export const PrintRecord = React.forwardRef<HTMLDivElement, PrintRecordProps>(({
             {book.remarks || 'No additional remarks.'}
           </div>
         </div>
+
+        {book.history && book.history.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-lg font-bold uppercase border-b-2 border-black pb-2 mb-4">Exchange History</h3>
+            <div className="space-y-4">
+              {book.history.map((h, i) => (
+                <div key={i} className="grid grid-cols-4 gap-4 text-sm">
+                  <span className="font-bold">Previous Book:</span>
+                  <span className="col-span-2">{h.old_title} (ISBN: {h.old_isbn || 'N/A'})</span>
+                  <span className="text-right font-mono italic">{h.exchange_date}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-24 flex justify-between">

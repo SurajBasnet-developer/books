@@ -83,9 +83,9 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
             Login to Dashboard
           </button>
           
-          {/* <p className="text-center text-xs text-gray-400">
+          <p className="text-center text-xs text-gray-400">
             Default: admin / admin123
-          </p> */}
+          </p>
         </form>
       </motion.div>
     </div>

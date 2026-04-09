@@ -4,19 +4,25 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Book, NewBook } from './types';
+import { Book, NewBook, Student } from './types';
 import BookForm from './components/BookForm';
 import BookList from './components/BookList';
+import ExchangeForm from './components/ExchangeForm';
+import StudentModal from './components/StudentModal';
 import { PrintRecord } from './components/PrintRecord';
 import LoginForm from './components/LoginForm';
-import { Plus, Library, GraduationCap, HeartPulse, LogOut } from 'lucide-react';
+import { Plus, Library, GraduationCap, HeartPulse, LogOut, Users } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { motion } from 'motion/react';
 
 export default function App() {
   const [books, setBooks] = useState<Book[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExchangeOpen, setIsExchangeOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [exchangingBook, setExchangingBook] = useState<Book | null>(null);
   const [printingBook, setPrintingBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<string | null>(null);
@@ -41,6 +47,15 @@ export default function App() {
     if (savedUser) {
       setUser(savedUser);
     }
+
+    const savedStudents = localStorage.getItem('university_students');
+    if (savedStudents) {
+      try {
+        setStudents(JSON.parse(savedStudents));
+      } catch (error) {
+        console.error('Error parsing saved students:', error);
+      }
+    }
     
     setIsLoading(false);
   }, []);
@@ -52,13 +67,45 @@ export default function App() {
     }
   }, [books, isLoading]);
 
+  // Save students to localStorage whenever they change
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('university_students', JSON.stringify(students));
+    }
+  }, [students, isLoading]);
+
+  const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
+    const newStudent: Student = {
+      ...studentData,
+      id: Date.now()
+    };
+    setStudents(prev => [...prev, newStudent]);
+  };
+
+  const handleUpdateStudent = (updatedStudent: Student) => {
+    setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+    // Also update student names in existing book records if they match
+    setBooks(prev => prev.map(book => {
+      const oldStudent = students.find(s => s.id === updatedStudent.id);
+      if (oldStudent && book.borrowed_by === oldStudent.name) {
+        return { ...book, borrowed_by: updatedStudent.name };
+      }
+      return book;
+    }));
+  };
+
+  const handleDeleteStudent = (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) return;
+    setStudents(prev => prev.filter(s => s.id !== id));
+  };
+
   const handleLogin = (username: string) => {
     setUser(username);
     localStorage.setItem('library_user', username);
   };
 
   const handleLogout = () => {
-    if (!confirm('Are you sure you want to logout?')) return;
+    if (!window.confirm('Are you sure you want to logout?')) return;
     setUser(null);
     localStorage.removeItem('library_user');
   };
@@ -115,6 +162,10 @@ export default function App() {
     setBooks(prev => prev.map(b => b.id === book.id ? { ...b, renew_date: newRenewDate } : b));
   };
 
+  const handleExchange = (updatedBook: Book) => {
+    setBooks(prev => prev.map(b => b.id === updatedBook.id ? updatedBook : b));
+  };
+
   const onPrintRequest = (book: Book) => {
     setPrintingBook(book);
     // Small delay to ensure state is updated before printing
@@ -151,6 +202,13 @@ export default function App() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsStudentModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-3.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition-all"
+              >
+                <Users className="w-5 h-5" />
+                <span className="hidden md:inline">Students</span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="p-3.5 text-gray-400 hover:text-brand-red hover:bg-brand-red/5 rounded-xl transition-all"
@@ -194,6 +252,10 @@ export default function App() {
               onDelete={handleDelete}
               onPrint={onPrintRequest}
               onRenew={handleRenew}
+              onExchange={(book) => {
+                setExchangingBook(book);
+                setIsExchangeOpen(true);
+              }}
             />
           </motion.div>
         )}
@@ -243,6 +305,27 @@ export default function App() {
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleSubmit}
         editingBook={editingBook}
+        students={students}
+      />
+
+      {/* Exchange Modal */}
+      <ExchangeForm
+        isOpen={isExchangeOpen}
+        onClose={() => setIsExchangeOpen(false)}
+        onSubmit={handleExchange}
+        bookToExchange={exchangingBook}
+        students={students}
+      />
+
+      {/* Student Management Modal */}
+      <StudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
+        students={students}
+        books={books}
+        onAddStudent={handleAddStudent}
+        onUpdateStudent={handleUpdateStudent}
+        onDeleteStudent={handleDeleteStudent}
       />
     </div>
   );

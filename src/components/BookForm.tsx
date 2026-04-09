@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Book, NewBook } from '../types';
-import { X, Save, BookOpen } from 'lucide-react';
+import { Book, NewBook, Student } from '../types';
+import { X, Save, BookOpen, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -9,9 +9,10 @@ interface BookFormProps {
   onClose: () => void;
   onSubmit: (book: NewBook | Book) => void;
   editingBook?: Book | null;
+  students: Student[];
 }
 
-export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: BookFormProps) {
+export default function BookForm({ isOpen, onClose, onSubmit, editingBook, students }: BookFormProps) {
   const [formData, setFormData] = useState<NewBook>({
     title: '',
     author: '',
@@ -155,13 +156,28 @@ export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: Boo
 
                 <div className="space-y-1.5 md:col-span-2">
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Borrowed By (Student Name)</label>
-                  <input
-                    type="text"
-                    value={formData.borrowed_by}
-                    onChange={(e) => setFormData({ ...formData, borrowed_by: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red transition-all bg-gray-50"
-                    placeholder="Enter student name"
-                  />
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <select
+                      value={formData.borrowed_by}
+                      onChange={(e) => setFormData({ ...formData, borrowed_by: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red transition-all bg-gray-50 appearance-none"
+                    >
+                      <option value="">Select a student</option>
+                      {students.map(s => (
+                        <option key={s.id} value={s.name}>{s.name} {s.student_id ? `(${s.student_id})` : ''}</option>
+                      ))}
+                      <option value="Other">Other / Manual Entry</option>
+                    </select>
+                  </div>
+                  {formData.borrowed_by === 'Other' && (
+                    <input
+                      type="text"
+                      className="mt-2 w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red transition-all bg-gray-50"
+                      placeholder="Enter student name manually"
+                      onChange={(e) => setFormData({ ...formData, borrowed_by: e.target.value })}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Book } from '../types';
-import { Search, Download, Printer, Edit2, Trash2, Book as BookIcon, RefreshCw, BarChart3, Users, AlertCircle, Upload, FileJson } from 'lucide-react';
+import { Search, Download, Printer, Edit2, Trash2, Book as BookIcon, RefreshCw, BarChart3, Users, AlertCircle, Upload, FileJson, ArrowRightLeft, History, ChevronDown, ChevronUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
 interface BookListProps {
@@ -11,10 +11,12 @@ interface BookListProps {
   onDelete: (id: number) => void;
   onPrint: (book: Book) => void;
   onRenew: (book: Book) => void;
+  onExchange: (book: Book) => void;
 }
 
-export default function BookList({ books, onEdit, onDelete, onPrint, onRenew }: BookListProps) {
+export default function BookList({ books, onEdit, onDelete, onPrint, onRenew, onExchange }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const filteredBooks = books.filter(book => 
@@ -189,25 +191,44 @@ export default function BookList({ books, onEdit, onDelete, onPrint, onRenew }: 
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredBooks.map((book, index) => (
-                <motion.tr
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  key={book.id}
-                  className="hover:bg-gray-50/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-brand-red/5 flex items-center justify-center text-brand-red">
-                        <BookIcon className="w-5 h-5" />
+                <React.Fragment key={book.id}>
+                  <motion.tr
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={cn(
+                      "hover:bg-gray-50/50 transition-colors cursor-pointer",
+                      expandedId === book.id && "bg-blue-50/30"
+                    )}
+                    onClick={() => setExpandedId(expandedId === book.id ? null : book.id)}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-10 h-10 rounded-lg bg-brand-red/5 flex items-center justify-center text-brand-red">
+                            <BookIcon className="w-5 h-5" />
+                          </div>
+                          {book.history && book.history.length > 0 && (
+                            <div className="text-blue-500">
+                              {expandedId === book.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <div className="font-bold text-brand-ink">{book.title}</div>
+                            {book.history && book.history.length > 0 && (
+                              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-[9px] font-bold text-blue-600 uppercase tracking-tighter" title="Has Exchange History">
+                                <History className="w-2.5 h-2.5" />
+                                {book.history.length}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">{book.author || 'Unknown Author'}</div>
+                          {book.isbn && <div className="text-[10px] text-brand-red/60 font-mono mt-0.5">ISBN: {book.isbn}</div>}
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-bold text-brand-ink">{book.title}</div>
-                        <div className="text-xs text-gray-500">{book.author || 'Unknown Author'}</div>
-                        {book.isbn && <div className="text-[10px] text-brand-red/60 font-mono mt-0.5">ISBN: {book.isbn}</div>}
-                      </div>
-                    </div>
-                  </td>
+                    </td>
                   <td className="px-6 py-4">
                     <div className="text-xs space-y-1">
                       <div className="flex gap-2"><span className="text-gray-400">Rec:</span> <span className="font-medium">{book.received_date || '-'}</span></div>
@@ -240,13 +261,20 @@ export default function BookList({ books, onEdit, onDelete, onPrint, onRenew }: 
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => onPrint(book)}
                         className="p-2 text-gray-400 hover:text-brand-red hover:bg-brand-red/5 rounded-lg transition-all"
                         title="Print Record"
                       >
                         <Printer className="w-4.5 h-4.5" />
+                      </button>
+                      <button
+                        onClick={() => onExchange(book)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Exchange Book"
+                      >
+                        <ArrowRightLeft className="w-4.5 h-4.5" />
                       </button>
                       <button
                         onClick={() => onEdit(book)}
@@ -265,7 +293,42 @@ export default function BookList({ books, onEdit, onDelete, onPrint, onRenew }: 
                     </div>
                   </td>
                 </motion.tr>
-              ))}
+
+                {/* Expanded History Row */}
+                <AnimatePresence>
+                  {expandedId === book.id && book.history && book.history.length > 0 && (
+                    <motion.tr
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-blue-50/20"
+                    >
+                      <td colSpan={5} className="px-12 py-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-2">
+                            <History className="w-3 h-3" />
+                            Exchange History for this Student
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {book.history.map((h, i) => (
+                              <div key={i} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex justify-between items-center group hover:border-blue-300 transition-colors">
+                                <div>
+                                  <div className="text-xs font-bold text-brand-ink">{h.old_title}</div>
+                                  <div className="text-[10px] text-gray-400">ISBN: {h.old_isbn || 'N/A'}</div>
+                                </div>
+                                <div className="text-[10px] font-mono text-blue-500 bg-blue-50 px-2 py-1 rounded group-hover:bg-blue-100 transition-colors">
+                                  {h.exchange_date}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )}
+                </AnimatePresence>
+              </React.Fragment>
+            ))}
               {filteredBooks.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-gray-400 italic">
