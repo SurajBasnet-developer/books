@@ -28,6 +28,11 @@ export const PrintRecord = React.forwardRef<HTMLDivElement, PrintRecordProps>(({
         </div>
 
         <div className="grid grid-cols-3 gap-4">
+          <span className="font-bold">ISBN:</span>
+          <span className="col-span-2 border-b border-dotted border-black">{book.isbn || 'N/A'}</span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
           <span className="font-bold">Received Date (Nepali):</span>
           <span className="col-span-2 border-b border-dotted border-black">{book.received_date || 'N/A'}</span>
         </div>

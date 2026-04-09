@@ -15,6 +15,7 @@ export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: Boo
   const [formData, setFormData] = useState<NewBook>({
     title: '',
     author: '',
+    isbn: '',
     received_date: '',
     renew_date: '',
     category: '',
@@ -27,6 +28,7 @@ export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: Boo
       setFormData({
         title: editingBook.title,
         author: editingBook.author || '',
+        isbn: editingBook.isbn || '',
         received_date: editingBook.received_date || '',
         renew_date: editingBook.renew_date || '',
         category: editingBook.category || '',
@@ -37,6 +39,7 @@ export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: Boo
       setFormData({
         title: '',
         author: '',
+        isbn: '',
         received_date: '',
         renew_date: '',
         category: '',
@@ -103,6 +106,17 @@ export default function BookForm({ isOpen, onClose, onSubmit, editingBook }: Boo
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red transition-all bg-gray-50"
                     placeholder="Enter author name"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">ISBN Number</label>
+                  <input
+                    type="text"
+                    value={formData.isbn}
+                    onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red transition-all bg-gray-50"
+                    placeholder="Enter ISBN"
                   />
                 </div>
 
