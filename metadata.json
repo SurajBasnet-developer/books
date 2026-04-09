@@ -1,0 +1,5 @@
+{
+  "name": "Vidushi Yogamaya Himalayan Ayurveda University Library",
+  "description": "A comprehensive book record keeping system for Vidushi Yogamaya Himalayan Ayurveda University, featuring Nepali date support, SQLite storage, Excel export, and individual record printing.",
+  "requestFramePermissions": []
+}
