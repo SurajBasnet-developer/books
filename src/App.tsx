@@ -208,7 +208,7 @@ export default function App() {
             className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-brand-red/5 text-brand-red mb-6"
           >
             <HeartPulse className="w-4 h-4 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-widest">Made with Love</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Suraj ❤️ Pratima</span>
           </motion.div>
           
           <div className="space-y-4">
